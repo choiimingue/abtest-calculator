@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A/B Test Sample Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 색상 시스템 */
+            --color-gray-50: #f9fafb;
+            --color-gray-100: #f3f4f6;
+            --color-gray-200: #e5e7eb;
+            --color-gray-300: #d1d5db;
+            --color-gray-500: #6b7280;
+            --color-gray-600: #4b5563;
+            --color-gray-800: #1f2937;
+            --color-gray-900: #111827;
+
+            --color-accent-orange: #F36F2B;
+            --color-accent-orange-light: #FF8B4A;
+
+            /* 테마 변수 */
+            --bg-section: var(--color-gray-50);
+            --bg-card: #ffffff;
+            --bg-card-hover: var(--color-gray-50);
+            --border-card: var(--color-gray-200);
+            --text-primary: var(--color-gray-900);
+            --text-secondary: var(--color-gray-600);
+            --text-muted: var(--color-gray-500);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, var(--bg-section) 0%, var(--color-gray-100) 100%);
+            min-height: 100vh;
+            padding: 32px 20px;
+            color: var(--text-primary);
+            font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 48px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-card);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-primary);
+            margin-bottom: 40px;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .form-group {
+            margin-bottom: 28px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 15px;
+            letter-spacing: -0.005em;
+        }
+
+        .tooltip {
+            display: inline-block;
+            margin-left: 3px;
+            width: 14px;
+            height: 14px;
+            background: var(--text-muted);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 10px;
+            line-height: 14px;
+            cursor: help;
+            position: relative;
+            vertical-align: middle;
+            top: -2px;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--color-gray-800);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .tooltip:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 115%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: var(--color-gray-800);
+            z-index: 1000;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 1.5px solid var(--border-card);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            background: var(--bg-card);
+            font-family: inherit;
+            color: var(--text-primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        select {
+            padding-right: 40px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6,9 12,15 18,9"></polyline></svg>');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--color-accent-orange);
+            box-shadow: 0 0 0 4px rgba(243, 111, 43, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+
+        select:hover, input:hover {
+            border-color: var(--color-gray-300);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        input::placeholder,
+        select.placeholder {
+            color: #a3a3a3;
+        }
+
+        select:not(.placeholder) {
+            color: var(--text-primary);
+        }
+
+        .input-with-unit {
+            position: relative;
+        }
+
+        .input-with-unit input {
+            padding-right: 44px;
+        }
+
+        .unit {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--color-accent-orange), var(--color-accent-orange-light));
+            color: white;
+            border: none;
+            padding: 18px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0 0 0;
+            font-family: inherit;
+            box-shadow: 0 8px 24px rgba(243, 111, 43, 0.25), 0 4px 12px rgba(243, 111, 43, 0.15);
+            letter-spacing: 0.02em;
+        }
+
+
+
+        .calculate-btn:hover {
+            background: linear-gradient(135deg, #E85A1A, var(--color-accent-orange));
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(243, 111, 43, 0.4);
+        }
+
+        .calculate-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(243, 111, 43, 0.3);
+        }
+
+        .results {
+            background: var(--bg-card-hover);
+            border-radius: 16px;
+            padding: 32px;
+            border: 1px solid var(--border-card);
+            display: none;
+            margin-top: 32px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .results.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .results h3 {
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-card);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 15px;
+        }
+
+        .result-value {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .highlight {
+            color: var(--color-accent-orange);
+        }
+
+        .interpretation {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.5;
+            white-space: pre-line;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .mde-toggle-group {
+            margin-bottom: 8px;
+        }
+
+        .toggle-buttons {
+            display: flex;
+            background: var(--bg-card-hover);
+            border-radius: 10px;
+            padding: 4px;
+            border: 1px solid var(--border-card);
+            width: fit-content;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+            font-family: inherit;
+        }
+
+        .toggle-btn.active {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .toggle-btn:hover:not(.active) {
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 32px 24px;
+                margin: 16px;
+                max-width: calc(100% - 32px);
+            }
+
+            h1 {
+                font-size: 24px;
+                margin-bottom: 32px;
+                letter-spacing: -0.015em;
+            }
+
+            .calculate-btn {
+                margin-top: 16px;
+                padding: 16px 24px;
+            }
+
+            .results {
+                padding: 24px;
+                margin-top: 24px;
+            }
+
+            .toggle-btn {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>A/B Test Sample Calculator</h1>
+        
+        <form id="calculatorForm">
+            <div class="form-group">
+                <label for="metricType">
+                    변수 종류 선택
+                </label>
+                <select id="metricType" class="placeholder" required>
+                    <option value="">선택해주세요</option>
+                    <option value="proportion">비율 지표 (클릭률, 전환율 등)</option>
+                    <option value="quantitative">연속형 지표 (평균 체류시간, 결제 금액 등)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="groupCount">
+                    그룹 수 선택
+                </label>
+                <select id="groupCount" class="placeholder" required>
+                    <option value="">선택해주세요</option>
+                    <option value="2">A/B (2그룹)</option>
+                    <option value="3">A/B/C (3그룹)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="baseline" id="baselineLabel">
+                    베이스라인 지표
+                    <span class="tooltip" data-tooltip="현재 성과 지표의 값">?</span>
+                </label>
+                <div class="input-with-unit">
+                    <input type="number" id="baseline" step="any" required>
+                    <span class="unit" id="baselineUnit"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="mde" id="mdeLabel">
+                    MDE (최소 검출 효과)
+                    <span class="tooltip" data-tooltip="통계적으로 의미있다고 판단할 최소한의 변화량">?</span>
+                </label>
+                <div class="mde-toggle-group">
+                    <div class="toggle-buttons">
+                        <button type="button" class="toggle-btn active" id="absoluteBtn">절대</button>
+                        <button type="button" class="toggle-btn" id="relativeBtn">상대</button>
+                    </div>
+                </div>
+                <div class="input-with-unit">
+                    <input type="number" id="mde" step="any" required>
+                    <span class="unit" id="mdeUnit"></span>
+                </div>
+            </div>
+
+            <div class="form-group hidden" id="stdDevGroup">
+                <label for="stdDev">
+                    표준편차
+                    <span class="tooltip" data-tooltip="연속형 지표의 표준편차 값">?</span>
+                </label>
+                <input type="number" id="stdDev" step="any">
+            </div>
+
+            <div class="form-group">
+                <label for="dailyTraffic">
+                    일일 유입 수 (선택사항)
+                    <span class="tooltip" data-tooltip="실험 기간 계산을 위한 일일 유입자 수">?</span>
+                </label>
+                <input type="number" id="dailyTraffic" min="1">
+            </div>
+
+            <button type="submit" class="calculate-btn">
+                계산하기
+            </button>
+        </form>
+
+        <div id="results" class="results">
+            <h3>계산 결과</h3>
+            <div class="result-item">
+                <span class="result-label">그룹당 샘플 수</span>
+                <span class="result-value highlight" id="samplePerGroup">-</span>
+            </div>
+            <div class="result-item">
+                <span class="result-label">전체 샘플 수</span>
+                <span class="result-value" id="totalSample">-</span>
+            </div>
+            <div class="result-item" id="durationRow">
+                <span class="result-label">최소 실험 기간</span>
+                <span class="result-value" id="duration">-</span>
+            </div>
+            <div class="interpretation" id="interpretation">
+                <!-- 해석 메시지가 여기에 표시됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const metricTypeSelect = document.getElementById('metricType');
+        const stdDevGroup = document.getElementById('stdDevGroup');
+        const baselineLabel = document.getElementById('baselineLabel');
+        const baselineUnit = document.getElementById('baselineUnit');
+        const mdeLabel = document.getElementById('mdeLabel');
+        const mdeUnit = document.getElementById('mdeUnit');
+        const form = document.getElementById('calculatorForm');
+        const results = document.getElementById('results');
+        const durationRow = document.getElementById('durationRow');
+        const absoluteBtn = document.getElementById('absoluteBtn');
+        const relativeBtn = document.getElementById('relativeBtn');
+        
+        let isRelativeMode = false;
+
+        // MDE 계산 모드 토글
+        function toggleMdeMode(isRelative) {
+            isRelativeMode = isRelative;
+            absoluteBtn.classList.toggle('active', !isRelative);
+            relativeBtn.classList.toggle('active', isRelative);
+            updateMdeLabels();
+        }
+
+        absoluteBtn.addEventListener('click', () => toggleMdeMode(false));
+        relativeBtn.addEventListener('click', () => toggleMdeMode(true));
+
+        function updateMdeLabels() {
+            const metricType = metricTypeSelect.value;
+            
+            if (metricType === 'proportion') {
+                if (isRelativeMode) {
+                    mdeLabel.innerHTML = 'MDE (상대 증가율) <span class="tooltip" data-tooltip="베이스라인 대비 상대적 증가율 (예: 20% = 5%→6%)">?</span>';
+                    mdeUnit.textContent = '%';
+                } else {
+                    mdeLabel.innerHTML = 'MDE (절대 차이) <span class="tooltip" data-tooltip="검출하고자 하는 퍼센트포인트 차이">?</span>';
+                    mdeUnit.textContent = '%';
+                }
+            } else if (metricType === 'quantitative') {
+                if (isRelativeMode) {
+                    mdeLabel.innerHTML = 'MDE (상대 증가율) <span class="tooltip" data-tooltip="베이스라인 대비 상대적 증가율">?</span>';
+                    mdeUnit.textContent = '%';
+                } else {
+                    mdeLabel.innerHTML = 'MDE (절대 차이) <span class="tooltip" data-tooltip="검출하고자 하는 평균의 차이">?</span>';
+                    mdeUnit.textContent = '';
+                }
+            }
+        }
+
+        // 변수 종류에 따른 UI 업데이트
+        metricTypeSelect.addEventListener('change', function() {
+            const isQuantitative = this.value === 'quantitative';
+            
+            // placeholder 클래스 관리
+            this.classList.toggle('placeholder', this.value === '');
+            
+            if (isQuantitative) {
+                stdDevGroup.classList.remove('hidden');
+                baselineLabel.innerHTML = '베이스라인 지표 (평균값) <span class="tooltip" data-tooltip="현재 평균값">?</span>';
+                baselineUnit.textContent = '';
+            } else if (this.value === 'proportion') {
+                stdDevGroup.classList.add('hidden');
+                baselineLabel.innerHTML = '베이스라인 지표 (%) <span class="tooltip" data-tooltip="현재 전환율/클릭률을 퍼센트로 입력">?</span>';
+                baselineUnit.textContent = '%';
+            }
+            
+            updateMdeLabels();
+        });
+
+        // 폼 제출 처리
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            calculateSampleSize();
+        });
+
+        // 그룹 수 선택 이벤트
+        document.getElementById('groupCount').addEventListener('change', function() {
+            this.classList.toggle('placeholder', this.value === '');
+        });
+
+        // 초기화
+        updateMdeLabels();
+
+        function calculateSampleSize() {
+            const metricType = document.getElementById('metricType').value;
+            const groupCount = parseInt(document.getElementById('groupCount').value);
+            const baseline = parseFloat(document.getElementById('baseline').value);
+            const mde = parseFloat(document.getElementById('mde').value);
+            const stdDev = parseFloat(document.getElementById('stdDev').value);
+            const dailyTraffic = parseInt(document.getElementById('dailyTraffic').value);
+
+            // 입력값 검증
+            if (!metricType || !groupCount || isNaN(baseline) || isNaN(mde)) {
+                alert('필수 항목을 모두 입력해주세요.');
+                return;
+            }
+
+                                     if (metricType === 'quantitative' && (isNaN(stdDev) || stdDev <= 0)) {
+                alert('연속형 지표의 경우 양수인 표준편차를 입력해주세요.');
+                return;
+            }
+
+            if (metricType === 'proportion' && isRelativeMode && (mde <= 0 || mde > 1000)) {
+                alert('상대 증가율은 0%보다 크고 1000%보다 작은 값을 입력해주세요.');
+                return;
+            }
+
+            let samplePerGroup;
+            
+            if (metricType === 'proportion') {
+                // 비율형 계산 (퍼센트를 비율로 변환)
+                const p1 = baseline / 100;
+                let p2;
+                
+                if (isRelativeMode) {
+                    // 상대 증가율 계산 (예: 5% + 20% 증가 = 6%)
+                    p2 = p1 * (1 + mde / 100);
+                } else {
+                    // 절대 차이 계산 (예: 5% + 1%포인트 = 6%)
+                    p2 = (baseline + mde) / 100;
+                }
+                
+                // 입력값 유효성 검사
+                if (p1 <= 0 || p1 >= 1 || p2 <= 0 || p2 >= 1) {
+                    alert('비율은 0%와 100% 사이의 값이어야 합니다.');
+                    return;
+                }
+                
+                // 표준적인 비율 차이 검정 공식
+                const zAlpha = 1.96; // 95% 신뢰도 (양측 검정)
+                const zBeta = 0.84;  // 80% 검정력
+                
+                const pooledP = (p1 + p2) / 2;
+                const pooledVar = pooledP * (1 - pooledP);
+                const diffVar = p1 * (1 - p1) + p2 * (1 - p2);
+                
+                const numerator = Math.pow(zAlpha * Math.sqrt(2 * pooledVar) + zBeta * Math.sqrt(diffVar), 2);
+                const denominator = Math.pow(p2 - p1, 2);
+                
+                samplePerGroup = Math.ceil(numerator / denominator);
+                
+                // 최소값 보정
+                if (samplePerGroup < 30) samplePerGroup = 30;
+                
+                                     } else {
+                // 연속형 계산 (t-test)
+                const zAlpha = 1.96; // 95% 신뢰도
+                const zBeta = 0.84;  // 80% 검정력
+                
+                let actualMde;
+                if (isRelativeMode) {
+                    // 상대 증가율 계산 (예: 100 + 20% 증가 = 120)
+                    actualMde = Math.abs(baseline * mde / 100);
+                } else {
+                    // 절대 차이 계산
+                    actualMde = Math.abs(mde);
+                }
+                
+                // Cohen's d 기반 계산
+                const effectSize = actualMde / stdDev;
+                
+                // 표준 공식: n = 2 * (Zα + Zβ)² / δ²
+                samplePerGroup = Math.ceil(2 * Math.pow(zAlpha + zBeta, 2) / Math.pow(effectSize, 2));
+                
+                // 최소값 보정
+                if (samplePerGroup < 30) samplePerGroup = 30;
+            }
+
+            const totalSample = samplePerGroup * groupCount;
+            
+            // 결과 표시
+            document.getElementById('samplePerGroup').textContent = samplePerGroup.toLocaleString() + '명';
+            document.getElementById('totalSample').textContent = totalSample.toLocaleString() + '명';
+            
+            // 실험 기간 계산
+            if (dailyTraffic && dailyTraffic > 0) {
+                const duration = Math.ceil(totalSample / dailyTraffic);
+                document.getElementById('duration').textContent = duration.toLocaleString() + '일';
+                durationRow.style.display = 'flex';
+                
+                // 해석 메시지
+                let interpretation = `실험을 위해 그룹당 ${samplePerGroup.toLocaleString()}명씩 총 ${totalSample.toLocaleString()}명의 샘플이 필요합니다.\n\n`;
+                interpretation += `일일 ${dailyTraffic.toLocaleString()}명의 유입이 있다면 최소 ${duration}일간 실험을 진행해야 합니다.`;
+                
+                if (metricType === 'proportion') {
+                    const p1 = baseline;
+                    const p2 = isRelativeMode ? p1 * (1 + mde / 100) : p1 + mde;
+                    interpretation += `\n\n📊 변화 감지 목표: ${p1.toFixed(1)}% → ${p2.toFixed(1)}%`;
+                }
+                
+                if (duration > 30) {
+                    interpretation += '\n\n💡 최소 실험 기간이 다소 길어질 수 있으니, MDE를 조정하거나 유입량 증대를 고려해보세요.';
+                }
+                
+                document.getElementById('interpretation').textContent = interpretation;
+            } else {
+                durationRow.style.display = 'none';
+                let interpretation = `실험을 위해 그룹당 ${samplePerGroup.toLocaleString()}명씩 총 ${totalSample.toLocaleString()}명의 샘플이 필요합니다.\n\n`;
+                
+                if (metricType === 'proportion') {
+                    const p1 = baseline;
+                    const p2 = isRelativeMode ? p1 * (1 + mde / 100) : p1 + mde;
+                    interpretation += `📊 변화 감지 목표: ${p1.toFixed(1)}% → ${p2.toFixed(1)}%\n\n`;
+                }
+                
+                interpretation += `💡 일일 유입 수를 입력하시면 최소 실험 기간을 계산해드립니다.`;
+                document.getElementById('interpretation').textContent = interpretation;
+            }
+            
+            results.classList.add('show');
+            results.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html> 
