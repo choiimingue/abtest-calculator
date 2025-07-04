@@ -14,6 +14,12 @@ A modern, responsive calculator for determining sample sizes and experiment dura
 
 Visit the calculator: [A/B Test Sample Calculator](https://choimingue.github.io/abtest-calculator/)
 
+## 📖 Documentation
+
+- **[Complete User Manual](AB_Test_Manual.md)**: Comprehensive guide for A/B test sample size calculation
+- **[Quick Start Guide](AB_Test_Manual.md#2-계산기-사용법)**: Step-by-step calculator usage
+- **[Best Practices](AB_Test_Manual.md#6-주의사항-및-모범-사례)**: Common mistakes and expert tips
+
 ## 📊 How to Use
 
 1. **Select metric type**: Choose between proportion (%, rates) or quantitative (averages) metrics
